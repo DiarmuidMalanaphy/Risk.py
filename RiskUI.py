@@ -395,17 +395,25 @@ class Game():
         else:
             return(player.adjacent_territories_cache)
     
-    def manoeuvre(self, player: Player, personal_territories_changed: bool = True ) -> None:
+    def manoeuvre(self, player: Player, personal_territories_changed: bool = True) -> None:
         
         manoveureable_territories = self.get_manoeuvreable_territories(player, changed = personal_territories_changed)
         
         source_territory, destination_territory, num_troops = player.manoeuvre(manoveureable_territories)
+        
         if source_territory is None:
-            return(None)
+            return None 
+        
+        if source_territory.get_troop_count()<num_troops:
+            if source_territory.get_troop_count()>1:
+                source_territory.decrement_troop_count(1) # Bad programming punishment.
+            return None
+        
         source_territory.decrement_troop_count(num_troops)
         destination_territory.increment_troop_count(num_troops)
         
         return None
+
 
         
         
