@@ -242,8 +242,8 @@ class RandomAgent(Player):
         territory = random.choice(list(self.personal_territories.values()))
         return territory
 
-    def reinforce(self) -> List[Tuple['Territory', int]]:
-        total_reinforcements = self.calculate_reinforcement()
+    def reinforce(self, total_reinforcements : int) -> List[Tuple['Territory', int]]:
+        
         reinforcement_allocation = []
 
         if self.personal_territories:

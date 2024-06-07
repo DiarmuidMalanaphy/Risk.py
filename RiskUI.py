@@ -1,16 +1,18 @@
 
 
-from collections import deque
+from collections import defaultdict, deque
 from enum import Enum
 import time
+import numpy as np
 import pygame
 import sys
 from typing import List, Dict, Tuple
 import random
+import graphoptimiser
 
 
 from Agent import RandomAgent, Player
-from AggressiveAgent import AggressiveAgent
+
 
 
 class Continent(Enum):
@@ -79,6 +81,55 @@ ADJACENCY_DICT = {
     42: {41, 40},
     43: {30, 1, 4}
 }
+
+ADJACENCY_ARRAY = np.array([
+    np.array([]),  # Empty list for territory ID 0 (assuming territory IDs start from 1)
+    np.array([43, 3, 5, 4]),
+    np.array([]),  # Empty list for territory ID 2
+    np.array([14, 6, 5, 1]),
+    np.array([43, 1, 5, 7]),
+    np.array([1, 3, 6, 7, 8, 4]),
+    np.array([3, 5, 8]),
+    np.array([8, 5, 4, 9]),
+    np.array([5, 6, 7, 9]),
+    np.array([7, 8, 10]),
+    np.array([9, 11, 12]),
+    np.array([10, 12, 13, 21]),
+    np.array([10, 11, 13]),
+    np.array([11, 12]),
+    np.array([3, 15, 16]),
+    np.array([14, 16, 17, 20]),
+    np.array([14, 15, 17, 18]),
+    np.array([16, 15, 20, 19, 18]),
+    np.array([16, 17, 19, 21]),
+    np.array([17, 18, 20, 21, 22, 35]),
+    np.array([15, 17, 19, 27, 31, 35]),
+    np.array([18, 19, 22, 23, 24, 11]),
+    np.array([19, 21, 35, 23]),
+    np.array([21, 22, 35, 24, 25, 26]),
+    np.array([21, 23, 25]),
+    np.array([24, 23, 26]),
+    np.array([23, 25]),
+    np.array([20, 31, 37, 28]),
+    np.array([27, 37, 33, 32, 29]),
+    np.array([28, 32, 30]),
+    np.array([29, 32, 34, 43]),
+    np.array([27, 37, 36, 35, 20]),
+    np.array([29, 30, 34, 33, 28]),
+    np.array([28, 32, 34, 37]),
+    np.array([33, 32, 30]),
+    np.array([31, 36, 22, 23, 19, 20]),
+    np.array([35, 38, 37, 31]),
+    np.array([38, 36, 33, 31, 27, 28]),
+    np.array([37, 36, 39]),
+    np.array([40, 41, 38]),
+    np.array([39, 41, 42]),
+    np.array([39, 42, 40]),
+    np.array([41, 40]),
+    np.array([30, 1, 4])
+], dtype=object)
+
+
     
 class Region(Enum):
     NORTH_AMERICA = frozenset({1, 3, 4, 5, 6, 7, 8, 9, 43})
@@ -119,6 +170,7 @@ class Territory():
         self.owner = None
         self.troop_count = 0
         self.id = id
+        self.reachable_territories = set()
 
     # def get_adjacent(self) -> List['Territory']:
     #     returned_territories = []
@@ -337,7 +389,8 @@ class Game():
         invading = True
         successfully_attacked = False
         while invading:
-            invasion = player.invade(self.get_enemy_adjacent_territories(player, changed = personal_territories_changed))
+            enemy_adj_territories = self.get_enemy_adjacent_territories(player, changed = personal_territories_changed)
+            invasion = player.invade(enemy_adj_territories )
             if invasion is None:
                 invading = False
                 if successfully_attacked:
@@ -376,24 +429,37 @@ class Game():
     def get_enemy_adjacent_territories(self, player: Player, changed : bool = True) -> List[Tuple[Territory, List[Territory]]]:
 
         if changed:
-        
-            player_territory_ids = set(player.personal_territories)
 
-            adjacent_territory_tuples = []
-            for territory_id in player.personal_territories:
-                all_adjacent_ids = set(ADJACENCY_DICT.get(territory_id, set()))
-                non_player_adjacent_ids = all_adjacent_ids - player_territory_ids
+            # start_time = time.time()
 
-                adjacent_territories = [self.territories[adjacent_id] for adjacent_id in non_player_adjacent_ids]
-                current_territory = self.territories[territory_id]
-                adjacent_territory_tuples.append((current_territory, adjacent_territories))
-
-            # Cache the adjacent territories for the player
-            player.adjacent_territories_cache = adjacent_territory_tuples
+            player_territories_array = np.array([t.id for t in player.personal_territories.values()],"int8")
+            id_dict = graphoptimiser.get_enemy_adj(player_territories_array)
+            enemy_adjacent_territories = [
+            (
+                player.personal_territories[territory_id],
+                [self.territories[enemy_id] for enemy_id in enemy_ids if enemy_id in self.territories]
+            )
+            for territory_id, enemy_ids in id_dict.items()
+            if territory_id in player.personal_territories
+            ]
+            # print(time.time()-start_time)
             
-            return adjacent_territory_tuples
-        else:
-            return(player.adjacent_territories_cache)
+            # start_time = time.time()
+            # player_territories_set = frozenset(player.personal_territories)
+            
+            # enemy_adjacent_territories = []
+
+            
+
+            # for territory_id in player.personal_territories:
+            #     adjacent_territories = self.precomputed_adjacent_territories[territory_id]
+            #     adjacent_enemy_territories = [t for t in adjacent_territories if t.id not in player_territories_set]
+            #     enemy_adjacent_territories.append((self.territories[territory_id], adjacent_enemy_territories))
+            # #print(enemy_adjacent_territories)
+            # print(time.time()-start_time)
+            player.adjacent_territories_cache = enemy_adjacent_territories
+        
+        return(player.adjacent_territories_cache)
     
     def manoeuvre(self, player: Player, personal_territories_changed: bool = True) -> None:
         
@@ -422,25 +488,37 @@ class Game():
             player_territories_set = set(player.personal_territories)
             maneuverable_territories = []
 
-            def bfs(start_territory_id):
-                visited = set()
-                reachable_territories = []
-                queue = deque([start_territory_id])
+            # Create an adjacency list representation of the graph
+            adjacency_list = defaultdict(list)
+            for territory_id in player_territories_set:
+                adjacent_ids = ADJACENCY_ARRAY[territory_id]
+                for adjacent_id in adjacent_ids:
+                    if adjacent_id in player_territories_set:
+                        adjacency_list[territory_id].append(adjacent_id)
 
-                while queue:
-                    current_id = queue.popleft()
-                    if current_id not in visited:
-                        visited.add(current_id)
-                        if current_id != start_territory_id:
-                            reachable_territories.append(self.territories[current_id])
-                        for adjacent_id in ADJACENCY_DICT.get(current_id, set()):
-                            if adjacent_id in player_territories_set and adjacent_id not in visited:
-                                queue.append(adjacent_id)
+            # Perform DFS to find connected components (islands)
+            visited = set()
+            island_map = {}
+            island_territories = defaultdict(set)
 
-                return reachable_territories
+            def dfs(territory_id, island_num):
+                visited.add(territory_id)
+                island_map[territory_id] = island_num
+                island_territories[island_num].add(territory_id)
+                for adjacent_id in adjacency_list[territory_id]:
+                    if adjacent_id not in visited:
+                        dfs(adjacent_id, island_num)
 
-            for territory_id in player.personal_territories:
-                reachable_territories = bfs(territory_id)
+            island_num = 0
+            for territory_id in player_territories_set:
+                if territory_id not in visited:
+                    island_num += 1
+                    dfs(territory_id, island_num)
+
+            # Create maneuverable territories using the island information
+            for territory_id in player_territories_set:
+                island_num = island_map[territory_id]
+                reachable_territories = [self.territories[t_id] for t_id in island_territories[island_num] if t_id != territory_id]
                 maneuverable_territories.append((self.territories[territory_id], reachable_territories))
 
             player.manoeuvreable_tiles = maneuverable_territories
