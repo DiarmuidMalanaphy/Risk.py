@@ -33,7 +33,7 @@ There are several areas where the project can be extended and improved:
 - **Graph Optimizations**: Since Risk is inherently a graph-based game with vertices and edges, there are various optimizations that can be made to improve performance. For example, PKnight3 and Mel implemented the concept of "Islands" to improve the efficiency of the `get_maneouvrable_territories` function by 4x.
 
 ## How to build an Agent
-    The `Player` class serves as a base class for creating bot agents. It defines the basic functionality and properties of a player in the Risk game. To create your own custom bot agent, you need to inherit from the `Player` class and implement the following abstract methods:
+The `Player` class serves as a base class for creating bot agents. It defines the basic functionality and properties of a player in the Risk game. To create your own custom bot agent, you need to inherit from the `Player` class and implement the following abstract methods:
 
     1. `make_selection(self, available_territories: List['Territory']) -> 'Territory'`: This method is called during the initial territory selection phase. It should return the selected territory from the list of available territories.
 
