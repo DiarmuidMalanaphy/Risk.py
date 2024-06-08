@@ -48,15 +48,15 @@ There are several areas where the project can be extended and improved:
     5. `manoeuvre(self, manoeuverable_territories: List[Tuple['Territory', List['Territory']]]) -> Tuple['Territory', 'Territory', int]`: This method is called during the maneuvering phase. It should return a tuple containing the source territory, the destination territory, and the number of troops to maneuver.
 
 
-    The code also provides an example implementation of a bot agent called `RandomAgent`. This agent inherits from the `Player` class and implements the abstract methods using random choices. For example:
+The code also provides an example implementation of a bot agent called `RandomAgent`. This agent inherits from the `Player` class and implements the abstract methods using random choices. For example:
 
-    - In the `make_selection` method, it randomly selects a territory from the available territories.
-    - In the `add_infantry` method, it randomly selects a territory from its owned territories to place the infantry.
-    - In the `reinforce` method, it randomly selects a territory and allocates all reinforcements to that territory.
-    - In the `invade` method, it selects the territory with the maximum number of troops and targets the adjacent enemy territory with the minimum number of troops.
-    - In the `manoeuvre` method, it randomly selects a source territory and a destination territory from the maneuverable territories and moves a random number of troops.
+- In the `make_selection` method, it randomly selects a territory from the available territories.
+- In the `add_infantry` method, it randomly selects a territory from its owned territories to place the infantry.
+- In the `reinforce` method, it randomly selects a territory and allocates all reinforcements to that territory.
+- In the `invade` method, it selects the territory with the maximum number of troops and targets the adjacent enemy territory with the minimum number of troops.
+- In the `manoeuvre` method, it randomly selects a source territory and a destination territory from the maneuverable territories and moves a random number of troops.
 
-    You can use the `RandomAgent` as a starting point and modify its behavior to create your own custom bot agents.
+You can use the `RandomAgent` as a starting point and modify its behavior to create your own custom bot agents.
 
 
 
