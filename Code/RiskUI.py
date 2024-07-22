@@ -722,51 +722,60 @@ territories = {
 
 
 
-
-
-
-player_count = 3
-
-starting_infantry_dict = {
-    2 : 40,
-    3 : 35,
-    4 : 30,
-    5 : 25
-}
-
-
-
-players = []
-
-for x in range(player_count):
-    players.append(RandomAgent(x,starting_infantry_dict[player_count]))
-
-
-
-
-
-game = Game(players, territories, simulating= True)
-win_counts = {}
-for player in game.stored_players:
-    win_counts[player.id] = 0
-
-results = []
-for x in range(1, 10000):
-    winner_id = game.play_game(game.stored_players, max_turns= 300)
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python script.py <arg>")
+        sys.exit(1)
     
-    print(f"Game {x}")
-    if winner_id is not None:
-        win_counts[winner_id] += 1
+    arg = int(sys.argv[1])
+
+    if arg not in [0, 1]:
+        print("Argument must be either 0 or 1")
+        sys.exit(1)
+    print(f"Argument: {arg}")
+    simulating = True if arg == 0 else False
+
+    player_count = 3
+
+    starting_infantry_dict = {
+        2 : 40,
+        3 : 35,
+        4 : 30,
+        5 : 25
+    }
 
 
-print("Win counts:")
-for player in players:
-    count = win_counts[player.id]
-    print(f"{player.get_player_name()}: {count} wins")
 
-    
-    
+    players = []
 
-if not game.simulating:
-    pygame.quit()
-sys.exit()
+    for x in range(player_count):
+        players.append(RandomAgent(x,starting_infantry_dict[player_count]))
+
+
+
+
+    game = Game(players, territories, simulating= simulating)
+    win_counts = {}
+    for player in game.stored_players:
+        win_counts[player.id] = 0
+
+    results = []
+    for x in range(1, 1000):
+        winner_id = game.play_game(game.stored_players, max_turns= 300)
+        
+        print(f"Game {x}")
+        if winner_id is not None:
+            win_counts[winner_id] += 1
+
+
+    print("Win counts:")
+    for player in players:
+        count = win_counts[player.id]
+        print(f"{player.get_player_name()}: {count} wins")
+
+        
+        
+
+    if not game.simulating:
+        pygame.quit()
+    sys.exit()

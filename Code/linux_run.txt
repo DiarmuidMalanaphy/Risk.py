@@ -1,0 +1,4 @@
+When running linux make sure to activate the virtual environment and modify the top line of the C code to import Numpy
+source venv/bin/activate
+
+

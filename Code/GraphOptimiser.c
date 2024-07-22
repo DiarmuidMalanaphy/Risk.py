@@ -2,9 +2,10 @@
 
 #include <stdio.h>
 #include <Python.h>
-#include <../Lib/site-packages/numpy/core/include/numpy/arrayobject.h>
-
-
+// For Linux
+//#include <numpy/arrayobject.h>
+// For Windows
+//#include <../Lib/site-packages/numpy/core/include/numpy/arrayobject.h>
 int8_t CONSISTENT_ADJACENCY_ARRAY[44][6] = {
     {-1, -1, -1, -1, -1, -1},  // Empty list for territory ID 0 (assuming territory IDs start from 1)
     {43,  3,  5,  4, -1, -1},
